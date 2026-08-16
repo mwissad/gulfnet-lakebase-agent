@@ -1,0 +1,102 @@
+# Databricks Asset Bundle — GulfNet Care Copilot
+bundle:
+  name: gulfnet_lakebase_agent
+
+variables:
+  lakebase_branch:
+    description: Full Lakebase branch resource path
+    default: projects/gulfnet-agent/branches/production
+  lakebase_database:
+    description: Full Lakebase database resource path
+    default: projects/gulfnet-agent/branches/production/databases/databricks-postgres
+
+resources:
+  experiments:
+    gulfnet_agent_exp:
+      name: "/Shared/gulfnet-care-copilot"
+
+  jobs:
+    gulfnet_queue_worker:
+      name: gulfnet-queue-worker
+      schedule:
+        quartz_cron_expression: "0 */5 * * * ?"
+        timezone_id: Asia/Dubai
+        pause_status: PAUSED
+      tasks:
+        - task_key: process_queue
+          spark_python_task:
+            python_file: ./jobs/process_queue.py
+          environment_key: default
+      environments:
+        - environment_key: default
+          spec:
+            environment_version: "3"
+            dependencies:
+              - psycopg[binary]>=3.2.0
+              - python-dotenv>=1.2.1
+
+  apps:
+    gulfnet_care_copilot:
+      name: "gulfnet-care-copilot"
+      description: "UAE telco Care Copilot — Lakebase memory, search, and orchestration"
+      source_code_path: ./
+      config:
+        command: ["uv", "run", "start-app"]
+        env:
+          - name: MLFLOW_TRACKING_URI
+            value: "databricks"
+          - name: MLFLOW_REGISTRY_URI
+            value: "databricks-uc"
+          - name: API_PROXY
+            value: "http://localhost:8000/invocations"
+          - name: CHAT_APP_PORT
+            value: "3000"
+          - name: CHAT_PROXY_TIMEOUT_SECONDS
+            value: "300"
+          - name: MLFLOW_EXPERIMENT_ID
+            value_from: "experiment"
+          - name: LAKEBASE_AUTOSCALING_ENDPOINT
+            value_from: "postgres"
+          - name: LAKEBASE_AUTOSCALING_PROJECT
+            value: "gulfnet-agent"
+          - name: LAKEBASE_AUTOSCALING_BRANCH
+            value: "production"
+          - name: LAKEBASE_AGENT_MEMORY_SCHEMA
+            value: "gulfnet_agent_memory"
+          - name: GULFNET_DATABASE
+            value: "gulfnet"
+          - name: LLM_ENDPOINT_NAME
+            value: "databricks-llama-4-maverick"
+          - name: DATABRICKS_EMBEDDING_ENDPOINT
+            value: "databricks-gte-large-en"
+          - name: ENABLE_QUEUE_WORKER
+            value: "1"
+          - name: LOG_LEVEL
+            value: "INFO"
+
+      resources:
+        - name: "experiment"
+          experiment:
+            experiment_name: "/Shared/gulfnet-care-copilot"
+            permission: "CAN_MANAGE"
+        - name: "postgres"
+          postgres:
+            branch: ${var.lakebase_branch}
+            database: ${var.lakebase_database}
+            permission: "CAN_CONNECT_AND_CREATE"
+
+targets:
+  dev:
+    mode: development
+    default: true
+    workspace:
+      host: https://fevm-mw-aws-demo.cloud.databricks.com
+
+  prod:
+    mode: production
+    workspace:
+      host: https://fevm-mw-aws-demo.cloud.databricks.com
+    resources:
+      apps:
+        gulfnet_care_copilot:
+          name: gulfnet-care-copilot

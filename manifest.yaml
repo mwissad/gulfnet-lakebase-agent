@@ -1,0 +1,13 @@
+version: 1
+name: "GulfNet Care Copilot"
+description: "UAE telco Care Copilot with Lakebase memory, hybrid search, and Postgres task orchestration."
+
+resource_specs:
+  - name: "experiment"
+    description: "MLflow experiment for Care Copilot traces."
+    experiment_spec:
+      permission: "CAN_EDIT"
+  - name: "postgres"
+    description: "Lakebase Autoscaling database for memory, OLTP tools, search, and the task queue."
+    postgres_spec:
+      permission: "CAN_CONNECT_AND_CREATE"
