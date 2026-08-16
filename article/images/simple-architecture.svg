@@ -1,0 +1,84 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="560" viewBox="0 0 1280 560">
+  <defs>
+    <style>
+      .title { font: 700 22px "DM Sans", Inter, Helvetica, Arial, sans-serif; fill: #F9F7F4; }
+      .sub   { font: 500 13px "DM Sans", Inter, Helvetica, Arial, sans-serif; fill: #9BB1B9; letter-spacing: 0.08em; }
+      .lbl   { font: 600 15px "DM Sans", Inter, Helvetica, Arial, sans-serif; fill: #F9F7F4; }
+      .cap   { font: 400 12.5px "DM Sans", Inter, Helvetica, Arial, sans-serif; fill: #9BB1B9; }
+      .pill  { font: 600 12px "DM Sans", Inter, Helvetica, Arial, sans-serif; fill: #F9F7F4; }
+      .arrow { font: 700 28px "DM Sans", Inter, Helvetica, Arial, sans-serif; fill: #FF3621; }
+      .note  { font: 500 13px "DM Sans", Inter, Helvetica, Arial, sans-serif; fill: #B9C9CF; }
+    </style>
+  </defs>
+
+  <rect width="1280" height="560" fill="#0D1B21"/>
+
+  <!-- LEFT -->
+  <rect x="40" y="48" width="520" height="460" rx="14" fill="#1B3139" stroke="#2A4A55" stroke-width="1.5"/>
+  <text class="sub" x="64" y="84">BEFORE</text>
+  <text class="title" x="64" y="116">Three backends glued together</text>
+  <text class="note" x="64" y="142">Separate systems for memory, retrieval, and queues</text>
+
+  <rect x="180" y="176" width="240" height="56" rx="10" fill="#24404A" stroke="#3D6674" stroke-width="1.5"/>
+  <text class="lbl" x="300" y="210" text-anchor="middle">Agent app</text>
+
+  <line x1="220" y1="232" x2="150" y2="290" stroke="#FF5F52" stroke-width="1.8" stroke-dasharray="5 4"/>
+  <line x1="300" y1="232" x2="300" y2="290" stroke="#FF5F52" stroke-width="1.8" stroke-dasharray="5 4"/>
+  <line x1="380" y1="232" x2="450" y2="290" stroke="#FF5F52" stroke-width="1.8" stroke-dasharray="5 4"/>
+
+  <rect x="70"  y="292" width="160" height="110" rx="10" fill="#0D1B21" stroke="#FF5F52" stroke-width="1.6"/>
+  <text class="lbl" x="150" y="336" text-anchor="middle">Redis</text>
+  <text class="cap" x="150" y="360" text-anchor="middle">session / cache</text>
+  <text class="cap" x="150" y="378" text-anchor="middle">memory</text>
+
+  <rect x="220" y="292" width="160" height="110" rx="10" fill="#0D1B21" stroke="#FF5F52" stroke-width="1.6"/>
+  <text class="lbl" x="300" y="336" text-anchor="middle">Vector DB</text>
+  <text class="cap" x="300" y="360" text-anchor="middle">embeddings</text>
+  <text class="cap" x="300" y="378" text-anchor="middle">retrieval</text>
+
+  <rect x="370" y="292" width="160" height="110" rx="10" fill="#0D1B21" stroke="#FF5F52" stroke-width="1.6"/>
+  <text class="lbl" x="450" y="336" text-anchor="middle">Broker</text>
+  <text class="cap" x="450" y="360" text-anchor="middle">Kafka / SQS</text>
+  <text class="cap" x="450" y="378" text-anchor="middle">orchestration</text>
+
+  <text class="pill" x="300" y="450" text-anchor="middle" fill="#FF5F52">sync, stale copies, three failure modes</text>
+
+  <text class="arrow" x="620" y="300" text-anchor="middle">→</text>
+  <text class="cap" x="620" y="330" text-anchor="middle">collapse</text>
+
+  <!-- RIGHT -->
+  <rect x="720" y="48" width="520" height="460" rx="14" fill="#1B3139" stroke="#FF3621" stroke-width="1.8"/>
+  <text class="sub" x="744" y="84" fill="#FF3621">AFTER</text>
+  <text class="title" x="744" y="116">One Lakebase Postgres</text>
+  <text class="note" x="744" y="142">Memory, search, and queues in the same OLTP system</text>
+
+  <rect x="790" y="172" width="130" height="48" rx="8" fill="#24404A" stroke="#3D6674" stroke-width="1.4"/>
+  <text class="pill" x="855" y="201" text-anchor="middle">Apps</text>
+  <rect x="940" y="172" width="130" height="48" rx="8" fill="#24404A" stroke="#3D6674" stroke-width="1.4"/>
+  <text class="pill" x="1005" y="201" text-anchor="middle">Jobs</text>
+  <rect x="1090" y="172" width="130" height="48" rx="8" fill="#24404A" stroke="#3D6674" stroke-width="1.4"/>
+  <text class="pill" x="1155" y="201" text-anchor="middle">MLflow</text>
+
+  <line x1="855"  y1="220" x2="980" y2="268" stroke="#FF3621" stroke-width="1.6"/>
+  <line x1="1005" y1="220" x2="980" y2="268" stroke="#FF3621" stroke-width="1.6"/>
+  <line x1="1155" y1="220" x2="980" y2="268" stroke="#FF3621" stroke-width="1.6"/>
+
+  <rect x="760" y="268" width="440" height="188" rx="12" fill="#0D1B21" stroke="#FF3621" stroke-width="2"/>
+  <text class="lbl" x="980" y="302" text-anchor="middle">Databricks Lakebase Postgres</text>
+
+  <rect x="784" y="322" width="124" height="100" rx="9" fill="rgba(255,171,0,0.12)" stroke="#FFAB00" stroke-width="1.5"/>
+  <text class="pill" x="846" y="360" text-anchor="middle" fill="#FFAB00">Memory</text>
+  <text class="cap"  x="846" y="384" text-anchor="middle">checkpoint + store</text>
+
+  <rect x="928" y="322" width="124" height="100" rx="9" fill="rgba(91,167,217,0.12)" stroke="#5BA7D9" stroke-width="1.5"/>
+  <text class="pill" x="990" y="360" text-anchor="middle" fill="#5BA7D9">Search</text>
+  <text class="cap"  x="990" y="384" text-anchor="middle">hybrid retrieval</text>
+
+  <rect x="1072" y="322" width="108" height="100" rx="9" fill="rgba(0,169,114,0.12)" stroke="#00A972" stroke-width="1.5"/>
+  <text class="pill" x="1126" y="356" text-anchor="middle" fill="#00A972">Orchestration</text>
+  <text class="cap"  x="1126" y="380" text-anchor="middle">SKIP LOCKED</text>
+  <text class="cap"  x="1126" y="398" text-anchor="middle">leases · SSE</text>
+
+  <text class="pill" x="980" y="490" text-anchor="middle" fill="#00A972">one OLTP system · one source of truth</text>
+</svg>

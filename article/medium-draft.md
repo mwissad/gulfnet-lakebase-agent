@@ -14,6 +14,10 @@ A UAE care agent helping a VIP customer does not need another chatbot demo. They
 
 Most stacks glue together Redis, a vector DB, and a broker. [Lakebase Postgres](https://www.databricks.com/blog/simplify-ai-agent-orchestration-lakebase-postgres) collapses that loop onto one OLTP system that already lives next to Databricks Apps, Jobs, and MLflow.
 
+![Before: Redis + vector DB + broker glued to an agent app. After: Databricks Apps, Jobs, and MLflow share one Lakebase Postgres for memory, search, and orchestration](images/simple-architecture.png)
+
+*The whole agent loop — short/long-term memory, hybrid retrieval, and durable task queues — becomes three pillars inside one Postgres, instead of three backends you have to keep in sync.*
+
 This article walks a fictional UAE operator — **GulfNet** — through that architecture. The full repo is open at **github.com/mwissad/gulfnet-lakebase-agent**.
 
 ---
