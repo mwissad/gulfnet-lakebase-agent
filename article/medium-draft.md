@@ -20,6 +20,12 @@ This article walks a fictional UAE operator — **GulfNet** — through that arc
 
 ## Architecture: one Lakebase, three pillars
 
+The app ships with an interactive architecture page (its landing screen) that lets you click any block or play the request flow through memory and back. Here it is paused on the first step:
+
+![GulfNet Care Copilot architecture: a Databricks App over a single Lakebase Postgres instance holding agent memory, hybrid search, and a task queue](images/architecture.png)
+
+*The amber band is agent memory — short-term (LangGraph checkpointer) and long-term (store + embeddings) — living in the same Lakebase instance as the operational tables, knowledge chunks, and task queue.*
+
 ```
 Databricks App (Care Copilot + Ops dashboard)
         │
