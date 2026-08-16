@@ -8,17 +8,40 @@ Reusable end-to-end demo: a **UAE telco Care Copilot** on Databricks Apps + **La
 
 Fictional operator **GulfNet** — synthetic data only. Built for Medium / customer demos and easy reuse under [github.com/mwissad](https://github.com/mwissad).
 
+**Live app (FE-VM):** [gulfnet-care-copilot](https://gulfnet-care-copilot-7474660038694393.aws.databricksapps.com/)
+
+## Screenshots
+
+Most stacks glue Redis, a vector DB, and a broker behind an agent. Lakebase collapses that onto one OLTP system next to Apps, Jobs, and MLflow:
+
+![Before vs after: Redis + vector DB + broker collapsed into one Lakebase Postgres](docs/images/simple-architecture.png)
+
+Interactive architecture page at `/` — click any block, or play the request flow through memory:
+
+![Interactive architecture landing page](docs/images/architecture.png)
+
+Chat console at `/chat` with a live left rail of every tool call and the Lakebase object it touches:
+
+![Chat console with live agent flow rail and Lakebase memory card](docs/images/chat.png)
+
+Ops dashboard at `/ops/dashboard` — Postgres task queue streamed over SSE:
+
+![Ops dashboard showing enqueued, processing, and completed Lakebase tasks](docs/images/ops.png)
+
 ## Architecture
 
 ```
-Chat UI + /ops/dashboard  →  LangGraph agent (Databricks App)
-                                │
-                     Lakebase Autoscaling Postgres
-                     ├─ gulfnet_agent_memory (checkpoints / store)
-                     ├─ gulfnet.* OLTP + kb_chunks
-                     └─ gulfnet.tasks / task_attempts
-                                │
-                     In-app worker or Lakeflow Job
+Architecture (/) + Chat (/chat) + Ops (/ops/dashboard)
+        │
+        ▼
+LangGraph agent (Databricks App)
+        │
+Lakebase Autoscaling Postgres
+├─ gulfnet_agent_memory (checkpoints / store)
+├─ gulfnet.* OLTP + kb_chunks
+└─ gulfnet.tasks / task_attempts
+        │
+In-app worker or Lakeflow Job
 ```
 
 Workspace used in development: `https://fevm-mw-aws-demo.cloud.databricks.com`  
