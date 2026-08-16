@@ -32,6 +32,8 @@ from agent_server.utils_memory import (
     get_user_id,
     init_lakebase_config,
     memory_tools,
+    recall_memory_block,
+    thread_is_new,
 )
 
 logger = logging.getLogger(__name__)
@@ -41,7 +43,7 @@ sp_workspace_client = WorkspaceClient()
 
 import os as _os
 
-LLM_ENDPOINT_NAME = _os.getenv("LLM_ENDPOINT_NAME", "databricks-llama-4-maverick")
+LLM_ENDPOINT_NAME = _os.getenv("LLM_ENDPOINT_NAME", "databricks-claude-sonnet-4-5")
 
 LAKEBASE_CONFIG = init_lakebase_config()
 
@@ -105,14 +107,20 @@ async def stream_handler(
     if user_id:
         config["configurable"]["user_id"] = user_id
 
-    input_state: dict[str, Any] = {
-        "messages": to_chat_completions_input([i.model_dump() for i in request.input]),
-        "custom_inputs": dict(request.custom_inputs or {}),
-    }
+    messages = to_chat_completions_input([i.model_dump() for i in request.input])
 
     try:
         async with acquire_lakebase_resources(LAKEBASE_CONFIG) as (checkpointer, store):
             config["configurable"]["store"] = store
+
+            if user_id and await thread_is_new(checkpointer, thread_id):
+                if recalled := await recall_memory_block(store, user_id):
+                    messages = [{"role": "system", "content": recalled}] + messages
+
+            input_state: dict[str, Any] = {
+                "messages": messages,
+                "custom_inputs": dict(request.custom_inputs or {}),
+            }
 
             agent = await init_agent(store=store, checkpointer=checkpointer)
 

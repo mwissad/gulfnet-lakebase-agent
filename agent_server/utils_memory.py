@@ -148,6 +148,48 @@ async def acquire_lakebase_resources(config: LakebaseConfig):
             yield resources
 
 
+def memory_namespace(user_id: str) -> Tuple[str, str]:
+    return ("user_memories", user_id.replace(".", "-"))
+
+
+async def thread_is_new(checkpointer, thread_id: str) -> bool:
+    """True when no checkpoint exists yet for this thread.
+
+    Used to inject the long-term memory block exactly once per conversation
+    instead of on every turn (later turns replay it from the checkpoint).
+    """
+    try:
+        tuple_ = await checkpointer.aget_tuple({"configurable": {"thread_id": thread_id}})
+        return tuple_ is None
+    except Exception:
+        logger.exception("Could not read checkpoint for thread %s; assuming new", thread_id)
+        return True
+
+
+async def recall_memory_block(store: BaseStore, user_id: str) -> Optional[str]:
+    """Format this user's stored memories for injection into the first turn.
+
+    Recall must not depend on the model choosing to call get_user_memory, so the
+    server reads the Lakebase store directly and puts the result in context.
+    """
+    limit = int(os.getenv("MEMORY_RECALL_LIMIT", "10"))
+    try:
+        items = await store.asearch(memory_namespace(user_id), limit=limit)
+    except Exception:
+        logger.exception("Long-term memory recall failed for user %s", user_id)
+        return None
+
+    if not items:
+        return None
+
+    lines = [f"- {item.key}: {json.dumps(item.value)}" for item in items]
+    return (
+        "Long-term memory recalled from Lakebase for this user "
+        f"({len(items)} item(s)). Treat these as previously confirmed facts and "
+        "use them without asking the user to repeat themselves:\n" + "\n".join(lines)
+    )
+
+
 def memory_tools():
     @tool
     async def get_user_memory(query: str, config: RunnableConfig) -> str:
@@ -160,7 +202,7 @@ def memory_tools():
         if not store:
             return "Memory not available - store not configured."
 
-        namespace = ("user_memories", user_id.replace(".", "-"))
+        namespace = memory_namespace(user_id)
         results = await store.asearch(namespace, query=query, limit=5)
 
         if not results:
@@ -180,7 +222,7 @@ def memory_tools():
         if not store:
             return "Cannot save memory - store not configured."
 
-        namespace = ("user_memories", user_id.replace(".", "-"))
+        namespace = memory_namespace(user_id)
 
         try:
             memory_data = json.loads(memory_data_json)
@@ -202,7 +244,7 @@ def memory_tools():
         if not store:
             return "Cannot delete memory - store not configured."
 
-        namespace = ("user_memories", user_id.replace(".", "-"))
+        namespace = memory_namespace(user_id)
         await store.adelete(namespace, memory_key)
         return f"Successfully deleted memory '{memory_key}' for user."
 

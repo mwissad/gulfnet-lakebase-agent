@@ -20,7 +20,7 @@ env:
   - name: ENDPOINT_NAME
     value: "projects/gulfnet-agent/branches/production/endpoints/primary"
   - name: LLM_ENDPOINT_NAME
-    value: "databricks-llama-4-maverick"
+    value: "databricks-claude-sonnet-4-5"
   - name: DATABRICKS_EMBEDDING_ENDPOINT
     value: "databricks-gte-large-en"
   - name: ENABLE_QUEUE_WORKER

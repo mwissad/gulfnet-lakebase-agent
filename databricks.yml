@@ -42,7 +42,7 @@ resources:
           - name: GULFNET_DATABASE
             value: "gulfnet"
           - name: LLM_ENDPOINT_NAME
-            value: "databricks-llama-4-maverick"
+            value: "databricks-claude-sonnet-4-5"
           - name: DATABRICKS_EMBEDDING_ENDPOINT
             value: "databricks-gte-large-en"
           - name: ENABLE_QUEUE_WORKER
@@ -64,7 +64,7 @@ resources:
             permission: "CAN_CONNECT_AND_CREATE"
         - name: "llm"
           serving_endpoint:
-            name: "databricks-llama-4-maverick"
+            name: "databricks-claude-sonnet-4-5"
             permission: "CAN_QUERY"
         - name: "embeddings"
           serving_endpoint:
