@@ -49,6 +49,8 @@ resources:
             value: "1"
           - name: LOG_LEVEL
             value: "INFO"
+          - name: ENDPOINT_NAME
+            value: "projects/gulfnet-agent/branches/production/endpoints/primary"
 
       resources:
         - name: "experiment"
@@ -60,6 +62,14 @@ resources:
             branch: ${var.lakebase_branch}
             database: ${var.lakebase_database}
             permission: "CAN_CONNECT_AND_CREATE"
+        - name: "llm"
+          serving_endpoint:
+            name: "databricks-llama-4-maverick"
+            permission: "CAN_QUERY"
+        - name: "embeddings"
+          serving_endpoint:
+            name: "databricks-gte-large-en"
+            permission: "CAN_QUERY"
 
   jobs:
     gulfnet_queue_worker:

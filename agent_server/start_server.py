@@ -36,7 +36,7 @@ class AgentServer(LongRunningAgentServer):
 
 agent_server = AgentServer(
     "ResponsesAgent",
-    enable_chat_proxy=True,
+    enable_chat_proxy=False,
     db_autoscaling_endpoint=LAKEBASE_CONFIG.autoscaling_endpoint,
     db_project=LAKEBASE_CONFIG.autoscaling_project,
     db_branch=LAKEBASE_CONFIG.autoscaling_branch,

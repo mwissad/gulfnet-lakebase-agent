@@ -1,4 +1,7 @@
-"""Lakebase connection helpers for GulfNet OLTP / search / orchestration."""
+"""Lakebase connection helpers for GulfNet OLTP / search / orchestration.
+
+Works both locally (CLI OAuth) and in Databricks Apps (SDK + injected PG* env).
+"""
 
 from __future__ import annotations
 
@@ -13,9 +16,26 @@ from urllib.parse import quote_plus
 logger = logging.getLogger(__name__)
 
 
+def _is_databricks_app() -> bool:
+    return bool(os.getenv("DATABRICKS_APP_NAME"))
+
+
 def _run_json(cmd: list[str]) -> Any:
     result = subprocess.run(cmd, capture_output=True, text=True, check=True)
     return json.loads(result.stdout)
+
+
+def _endpoint_path() -> str:
+    explicit = os.getenv("LAKEBASE_AUTOSCALING_ENDPOINT") or os.getenv("ENDPOINT_NAME")
+    if explicit and explicit.startswith("projects/"):
+        return explicit
+    project = os.getenv("LAKEBASE_AUTOSCALING_PROJECT", "gulfnet-agent")
+    branch = os.getenv("LAKEBASE_AUTOSCALING_BRANCH", "production")
+    endpoint = os.getenv("LAKEBASE_ENDPOINT_ID", "primary")
+    if explicit and not explicit.startswith("projects/"):
+        # Short endpoint id / uid from value_from postgres
+        return f"projects/{project}/branches/{branch}/endpoints/{explicit}"
+    return f"projects/{project}/branches/{branch}/endpoints/{endpoint}"
 
 
 def get_connection_params(
@@ -25,18 +45,50 @@ def get_connection_params(
     endpoint: Optional[str] = None,
     database: Optional[str] = None,
 ) -> dict[str, str]:
-    """Resolve host/user/password for Lakebase Autoscaling via CLI OAuth."""
+    """Resolve host/user/password for Lakebase Autoscaling."""
+    database = database or os.getenv("GULFNET_DATABASE", "gulfnet")
+
+    # --- Databricks Apps path (preferred when deployed) ---
+    if _is_databricks_app() or os.getenv("PGHOST"):
+        host = os.getenv("LAKEBASE_HOST") or os.getenv("PGHOST")
+        user = os.getenv("LAKEBASE_USER") or os.getenv("PGUSER")
+        port = os.getenv("PGPORT", "5432")
+        if not host or not user:
+            raise RuntimeError(
+                "PGHOST/PGUSER (or LAKEBASE_HOST/LAKEBASE_USER) required in Apps environment"
+            )
+        token = os.getenv("LAKEBASE_TOKEN")
+        if not token:
+            from databricks.sdk import WorkspaceClient
+
+            w = WorkspaceClient()
+            ep = _endpoint_path()
+            # SDK postgres credential API (autoscaling)
+            try:
+                cred = w.postgres.generate_database_credential(endpoint=ep)
+                token = cred.token
+            except Exception:
+                # Fallback for older SDK shapes
+                cred = w.database.generate_database_credential(instance_names=[ep])
+                token = cred.token
+        return {
+            "host": host,
+            "port": port,
+            "dbname": database,
+            "user": user,
+            "password": token,
+            "sslmode": os.getenv("PGSSLMODE", "require"),
+        }
+
+    # --- Local CLI path ---
     profile = profile or os.getenv("DATABRICKS_CONFIG_PROFILE", "fe-vm-mw-aws-demo")
     project = project or os.getenv("LAKEBASE_AUTOSCALING_PROJECT", "gulfnet-agent")
     branch = branch or os.getenv("LAKEBASE_AUTOSCALING_BRANCH", "production")
     endpoint = endpoint or os.getenv("LAKEBASE_ENDPOINT_ID", "primary")
-    database = database or os.getenv("GULFNET_DATABASE", "gulfnet")
-
     dbx = os.getenv("DATABRICKS_CLI_PATH", "databricks")
     branch_path = f"projects/{project}/branches/{branch}"
-    endpoint_path = f"{branch_path}/endpoints/{endpoint}"
+    endpoint_path = _endpoint_path()
 
-    # Prefer explicit host override (useful in Apps)
     host = os.getenv("LAKEBASE_HOST")
     if not host:
         endpoints = _run_json(

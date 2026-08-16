@@ -139,6 +139,15 @@ def dequeue_task(max_concurrent: int = 3, worker_id: str = WORKER_ID) -> Optiona
             return task
 
 
+def _json_dumps(obj: Any) -> str:
+    def _default(o: Any) -> Any:
+        if hasattr(o, "isoformat"):
+            return o.isoformat()
+        return str(o)
+
+    return json.dumps(obj, default=_default)
+
+
 def complete_task(task_id: str, result: dict[str, Any]) -> None:
     execute(
         """
@@ -150,7 +159,7 @@ def complete_task(task_id: str, result: dict[str, Any]) -> None:
             lease_expires_at = NULL
         WHERE task_id = %s::uuid
         """,
-        (json.dumps(result), task_id),
+        (_json_dumps(result), task_id),
     )
     execute(
         """
