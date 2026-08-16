@@ -49,8 +49,10 @@ app = agent_server.app  # noqa: F841
 setup_mlflow_git_based_version_tracking()
 
 from agent_server.ops_routes import router as ops_router  # noqa: E402
+from agent_server.ui_routes import router as ui_router  # noqa: E402
 
 app.include_router(ops_router)
+app.include_router(ui_router)
 
 _original_lifespan = app.router.lifespan_context
 _worker_task = None
