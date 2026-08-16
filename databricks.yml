@@ -11,30 +11,6 @@ variables:
     default: projects/gulfnet-agent/branches/production/databases/databricks-postgres
 
 resources:
-  experiments:
-    gulfnet_agent_exp:
-      name: "/Shared/gulfnet-care-copilot"
-
-  jobs:
-    gulfnet_queue_worker:
-      name: gulfnet-queue-worker
-      schedule:
-        quartz_cron_expression: "0 */5 * * * ?"
-        timezone_id: Asia/Dubai
-        pause_status: PAUSED
-      tasks:
-        - task_key: process_queue
-          spark_python_task:
-            python_file: ./jobs/process_queue.py
-          environment_key: default
-      environments:
-        - environment_key: default
-          spec:
-            environment_version: "3"
-            dependencies:
-              - psycopg[binary]>=3.2.0
-              - python-dotenv>=1.2.1
-
   apps:
     gulfnet_care_copilot:
       name: "gulfnet-care-copilot"
@@ -77,13 +53,33 @@ resources:
       resources:
         - name: "experiment"
           experiment:
-            experiment_name: "/Shared/gulfnet-care-copilot"
+            experiment_id: "98057589528608"
             permission: "CAN_MANAGE"
         - name: "postgres"
           postgres:
             branch: ${var.lakebase_branch}
             database: ${var.lakebase_database}
             permission: "CAN_CONNECT_AND_CREATE"
+
+  jobs:
+    gulfnet_queue_worker:
+      name: gulfnet-queue-worker
+      schedule:
+        quartz_cron_expression: "0 */5 * * * ?"
+        timezone_id: Asia/Dubai
+        pause_status: PAUSED
+      tasks:
+        - task_key: process_queue
+          spark_python_task:
+            python_file: ./jobs/process_queue.py
+          environment_key: default
+      environments:
+        - environment_key: default
+          spec:
+            environment_version: "3"
+            dependencies:
+              - psycopg[binary]>=3.2.0
+              - python-dotenv>=1.2.1
 
 targets:
   dev:
