@@ -71,9 +71,15 @@ uv run python scripts/smoke_test_tools.py
 
 ```bash
 uv run start-app
-# Chat UI (if bundled) + API on :8000
-# Ops dashboard: http://localhost:8000/ops/dashboard
 ```
+
+| Page | Path | What it shows |
+| --- | --- | --- |
+| Architecture | `/` | Interactive diagram; click any block, or play the flow to follow a question through memory |
+| Chat | `/chat` | Care console with a live rail of every tool call and the Lakebase object it touches |
+| Ops dashboard | `/ops/dashboard` | Task queue state, streamed over SSE |
+
+Locally that is `http://localhost:8000/`.
 
 ### 6. Deploy with Asset Bundle
 
