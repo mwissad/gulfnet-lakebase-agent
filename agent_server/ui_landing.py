@@ -1,94 +1,96 @@
 """Interactive architecture page: how the agent and its memory work."""
 
-from agent_server.ui_common import BASE_CSS, header_html
+from agent_server.ui_common import BASE_CSS, FAVICON, header_html
 
 _CSS = """
 main { flex:1; width:100%; max-width:1120px; margin:0 auto; padding:22px 22px 40px; }
 .hero { display:flex; align-items:flex-end; justify-content:space-between; gap:22px; flex-wrap:wrap; margin-bottom:20px; }
-.hero h2 { margin:0 0 8px; font-size:27px; line-height:1.2; }
-.hero h2 em { color:var(--mem); font-style:normal; }
-.hero p { margin:0; max-width:620px; font-size:13.5px; color:var(--muted); line-height:1.6; }
+.hero h2 { margin:0 0 8px; font-size:28px; line-height:1.2; font-weight:600; letter-spacing:-.01em; }
+.hero h2 em { color:var(--lava); font-style:normal; }
+.hero p { margin:0; max-width:640px; font-size:13.5px; color:var(--muted); line-height:1.65; }
 .cta { display:flex; gap:10px; flex-wrap:wrap; }
 .btn {
-  border:0; border-radius:10px; padding:12px 20px; font-size:14px; font-weight:600;
+  border:0; border-radius:7px; padding:12px 22px; font-size:14px; font-weight:600;
   cursor:pointer; font-family:inherit; text-decoration:none; display:inline-block;
-  background:var(--accent); color:#06241c;
+  background:var(--lava); color:#fff;
 }
-.btn.ghost { background:transparent; color:var(--ink); border:1px solid #2a5c4c; }
-.btn.ghost:hover { border-color:var(--mem); color:var(--mem); }
+.btn:hover { background:var(--lava-dim); }
+.btn.ghost { background:rgba(27,49,57,.6); color:var(--oat); border:1px solid var(--line); }
+.btn.ghost:hover { border-color:var(--lava); color:var(--lava); background:rgba(255,54,33,.08); }
 
-.stage { background:rgba(6,26,21,.5); border:1px solid var(--line); border-radius:14px; padding:8px 10px 4px; }
+.stage { background:rgba(13,27,33,.55); border:1px solid var(--line); border-radius:10px; padding:8px 10px 4px; }
 svg#arch { width:100%; height:auto; display:block; }
 
-.nd rect { fill:var(--panel); stroke:var(--line); stroke-width:1.4; transition:all .25s ease; }
-.nd .nt { fill:var(--ink); font-size:13px; font-weight:600; }
+.nd rect { fill:var(--navy-800); stroke:var(--line); stroke-width:1.4; transition:all .25s ease; }
+.nd .nt { fill:var(--oat); font-size:13px; font-weight:600; }
 .nd .ns { fill:var(--muted); font-size:10.5px; }
 .nd { cursor:pointer; }
-.nd:hover rect { stroke:var(--accent); }
-.nd.mem rect { fill:rgba(247,201,72,.09); stroke:rgba(247,201,72,.55); }
-.nd.dat rect { fill:rgba(94,176,239,.08); stroke:rgba(94,176,239,.45); }
-.nd.on rect { stroke:var(--accent); stroke-width:2.6; filter:drop-shadow(0 0 11px rgba(45,212,168,.6)); }
-.nd.mem.on rect { stroke:var(--mem); filter:drop-shadow(0 0 12px rgba(247,201,72,.6)); }
+.nd:hover rect { stroke:var(--lava); }
+.nd.mem rect { fill:rgba(255,171,0,.09); stroke:rgba(255,171,0,.5); }
+.nd.dat rect { fill:rgba(91,167,217,.09); stroke:rgba(91,167,217,.45); }
+.nd.on rect { stroke:var(--lava); stroke-width:2.6; filter:drop-shadow(0 0 12px rgba(255,54,33,.65)); }
+.nd.mem.on rect { stroke:var(--maize); filter:drop-shadow(0 0 12px rgba(255,171,0,.6)); }
 .lbl { fill:var(--muted); font-size:10.5px; letter-spacing:.14em; }
-.band { fill:rgba(247,201,72,.045); stroke:rgba(247,201,72,.4); stroke-width:1.2; stroke-dasharray:5 4; }
-.bandlbl { fill:var(--mem); font-size:10.5px; letter-spacing:.16em; font-weight:600; }
+.band { fill:rgba(255,171,0,.05); stroke:rgba(255,171,0,.38); stroke-width:1.2; stroke-dasharray:5 4; }
+.bandlbl { fill:var(--maize); font-size:10.5px; letter-spacing:.16em; font-weight:600; }
 
-path.edge { fill:none; stroke:#2f6a58; stroke-width:1.6; }
-path.edge.memflow { stroke:rgba(247,201,72,.5); stroke-dasharray:6 5; }
-path.edge.on { stroke:var(--accent); stroke-width:2.6; }
-path.edge.memflow.on { stroke:var(--mem); stroke-width:2.6; animation:dash 1s linear infinite; }
+path.edge { fill:none; stroke:#3D6674; stroke-width:1.6; }
+path.edge.memflow { stroke:rgba(255,171,0,.5); stroke-dasharray:6 5; }
+path.edge.on { stroke:var(--lava); stroke-width:2.6; }
+path.edge.memflow.on { stroke:var(--maize); stroke-width:2.6; animation:dash 1s linear infinite; }
 @keyframes dash { to { stroke-dashoffset:-22; } }
 
 .player { display:flex; align-items:center; gap:12px; flex-wrap:wrap; margin:16px 0 0; }
 .player button {
-  background:var(--panel); border:1px solid #2a5c4c; color:var(--ink); font-family:inherit;
-  border-radius:8px; padding:8px 14px; font-size:12.5px; cursor:pointer;
+  background:rgba(27,49,57,.6); border:1px solid var(--line); color:var(--oat); font-family:inherit;
+  border-radius:6px; padding:8px 14px; font-size:12.5px; cursor:pointer;
 }
-.player button:hover { border-color:var(--accent); color:var(--accent); }
+.player button:hover { border-color:var(--lava); color:var(--lava); }
 .dots { display:flex; gap:6px; }
-.dot { width:8px; height:8px; border-radius:50%; background:#245647; cursor:pointer; border:0; padding:0; }
-.dot.on { background:var(--mem); }
+.dot { width:8px; height:8px; border-radius:50%; background:var(--navy-600); cursor:pointer; border:0; padding:0; }
+.dot.on { background:var(--lava); }
 .step {
-  margin-top:14px; background:var(--panel); border:1px solid var(--line); border-left:3px solid var(--mem);
-  border-radius:10px; padding:13px 16px; min-height:66px;
+  margin-top:14px; background:var(--navy-800); border:1px solid var(--line); border-left:3px solid var(--lava);
+  border-radius:8px; padding:13px 16px; min-height:66px;
 }
 .step h4 { margin:0 0 5px; font-size:13.5px; }
 .step p { margin:0; font-size:12.5px; color:var(--muted); line-height:1.6; }
 
-.detail { margin-top:16px; display:grid; grid-template-columns:1fr 260px; gap:14px; }
+.detail { margin-top:16px; display:grid; grid-template-columns:1fr 268px; gap:14px; }
 @media (max-width:820px) { .detail { grid-template-columns:1fr; } }
-.card { background:var(--panel); border:1px solid var(--line); border-radius:10px; padding:14px 16px; }
+.card { background:var(--navy-800); border:1px solid var(--line); border-radius:8px; padding:14px 16px; }
 .card h4 { margin:0 0 7px; font-size:13.5px; }
-.card p { margin:0; font-size:12.5px; color:var(--muted); line-height:1.6; }
-.card code { background:#0a2620; border:1px solid var(--line); border-radius:5px; padding:1px 5px; font-size:11.5px; color:var(--accent); }
+.card p { margin:0; font-size:12.5px; color:var(--muted); line-height:1.65; }
+.card code { background:var(--navy-900); border:1px solid var(--line); border-radius:4px; padding:1px 5px; font-size:11.5px; color:var(--lava); }
 .meta div { font-size:11.5px; color:var(--muted); margin-bottom:9px; }
 .meta div:last-child { margin-bottom:0; }
-.meta span { display:block; color:#557f72; font-size:10px; letter-spacing:.1em; margin-bottom:2px; }
+.meta span { display:block; color:#6E8B95; font-size:10px; letter-spacing:.1em; margin-bottom:3px; }
 footer { text-align:center; font-size:11.5px; color:var(--muted); padding:0 22px 18px; }
+footer b { color:#B9C9CF; font-weight:600; }
 """
 
 _SVG = """
-<svg id="arch" viewBox="0 0 1060 610" role="img" aria-label="GulfNet Care Copilot architecture">
+<svg id="arch" viewBox="0 0 1060 610" role="img" aria-label="GulfNet Care Copilot architecture on Databricks Lakebase">
   <defs>
     <marker id="arw" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
-      <path d="M0,0 L10,5 L0,10 z" fill="#2f6a58"/>
+      <path d="M0,0 L10,5 L0,10 z" fill="#3D6674"/>
     </marker>
     <marker id="arwm" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
-      <path d="M0,0 L10,5 L0,10 z" fill="rgba(247,201,72,.75)"/>
+      <path d="M0,0 L10,5 L0,10 z" fill="rgba(255,171,0,.75)"/>
     </marker>
   </defs>
 
-  <rect class="band" x="30" y="44" width="1000" height="134" rx="14"/>
-  <text class="bandlbl" x="48" y="66">MEMORY IN LAKEBASE POSTGRES</text>
+  <rect class="band" x="30" y="44" width="1000" height="134" rx="12"/>
+  <text class="bandlbl" x="48" y="66">AGENT MEMORY IN DATABRICKS LAKEBASE</text>
 
   <g class="nd mem" data-id="m1">
-    <rect x="58" y="82" width="452" height="76" rx="10"/>
+    <rect x="58" y="82" width="452" height="76" rx="9"/>
     <text class="nt" x="76" y="110">Short-term &mdash; LangGraph checkpointer</text>
     <text class="ns" x="76" y="130">One row set per thread_id. Replays the conversation so</text>
     <text class="ns" x="76" y="146">follow-ups keep context without resending history.</text>
   </g>
   <g class="nd mem" data-id="m2">
-    <rect x="550" y="82" width="452" height="76" rx="10"/>
+    <rect x="550" y="82" width="452" height="76" rx="9"/>
     <text class="nt" x="568" y="110">Long-term &mdash; store + gte-large embeddings</text>
     <text class="ns" x="568" y="130">user_memories namespace per user. Preferences and travel</text>
     <text class="ns" x="568" y="146">notes survive across separate conversations.</text>
@@ -97,7 +99,7 @@ _SVG = """
   <text class="lbl" x="30" y="240">CARE CONSOLE</text>
   <text class="lbl" x="300" y="240">AGENT RUNTIME</text>
   <text class="lbl" x="560" y="240">AGENT TOOLS</text>
-  <text class="lbl" x="820" y="240">LAKEBASE DATA</text>
+  <text class="lbl" x="820" y="240">LAKEBASE POSTGRES</text>
 
   <path id="p_a1_b1" class="edge" d="M240,335 C270,335 270,307 300,307" marker-end="url(#arw)"/>
   <path id="p_b1_b2" class="edge" d="M405,342 V372" marker-end="url(#arw)"/>
@@ -114,59 +116,59 @@ _SVG = """
   <path id="p_c3_m2" class="edge memflow" d="M760,422 H790 V158" marker-end="url(#arwm)"/>
 
   <g class="nd" data-id="a1">
-    <rect x="30" y="300" width="210" height="70" rx="10"/>
+    <rect x="30" y="300" width="210" height="70" rx="9"/>
     <text class="nt" x="48" y="330">Care console</text>
-    <text class="ns" x="48" y="350">Chat + live agent flow</text>
+    <text class="ns" x="48" y="350">Databricks App, SSO</text>
   </g>
   <g class="nd" data-id="b1">
-    <rect x="300" y="272" width="210" height="70" rx="10"/>
+    <rect x="300" y="272" width="210" height="70" rx="9"/>
     <text class="nt" x="318" y="302">Agent server</text>
     <text class="ns" x="318" y="322">FastAPI, streams SSE</text>
   </g>
   <g class="nd" data-id="b2">
-    <rect x="300" y="372" width="210" height="70" rx="10"/>
+    <rect x="300" y="372" width="210" height="70" rx="9"/>
     <text class="nt" x="318" y="402">LangGraph + Claude 4.5</text>
-    <text class="ns" x="318" y="422">Reasons, picks tools</text>
+    <text class="ns" x="318" y="422">Model Serving endpoint</text>
   </g>
 
   <g class="nd" data-id="c1">
-    <rect x="560" y="258" width="200" height="56" rx="9"/>
+    <rect x="560" y="258" width="200" height="56" rx="8"/>
     <text class="nt" x="576" y="282">Care tools</text>
     <text class="ns" x="576" y="300">subscriber, usage, plans</text>
   </g>
   <g class="nd" data-id="c2">
-    <rect x="560" y="326" width="200" height="56" rx="9"/>
+    <rect x="560" y="326" width="200" height="56" rx="8"/>
     <text class="nt" x="576" y="350">search_knowledge</text>
     <text class="ns" x="576" y="368">hybrid retrieval</text>
   </g>
   <g class="nd" data-id="c3">
-    <rect x="560" y="394" width="200" height="56" rx="9"/>
+    <rect x="560" y="394" width="200" height="56" rx="8"/>
     <text class="nt" x="576" y="418">Memory tools</text>
     <text class="ns" x="576" y="436">get / save / delete</text>
   </g>
   <g class="nd" data-id="c4">
-    <rect x="560" y="462" width="200" height="56" rx="9"/>
+    <rect x="560" y="462" width="200" height="56" rx="8"/>
     <text class="nt" x="576" y="486">Ops queue tools</text>
     <text class="ns" x="576" y="504">enqueue / status</text>
   </g>
 
   <g class="nd dat" data-id="d1">
-    <rect x="820" y="258" width="210" height="56" rx="9"/>
+    <rect x="820" y="258" width="210" height="56" rx="8"/>
     <text class="nt" x="836" y="282">gulfnet OLTP</text>
     <text class="ns" x="836" y="300">subscribers, usage, tickets</text>
   </g>
   <g class="nd dat" data-id="d2">
-    <rect x="820" y="326" width="210" height="56" rx="9"/>
+    <rect x="820" y="326" width="210" height="56" rx="8"/>
     <text class="nt" x="836" y="350">kb_chunks</text>
     <text class="ns" x="836" y="368">tsvector + embedding</text>
   </g>
   <g class="nd dat" data-id="d3">
-    <rect x="820" y="462" width="210" height="56" rx="9"/>
+    <rect x="820" y="462" width="210" height="56" rx="8"/>
     <text class="nt" x="836" y="486">tasks queue</text>
     <text class="ns" x="836" y="504">FOR UPDATE SKIP LOCKED</text>
   </g>
   <g class="nd" data-id="w1">
-    <rect x="560" y="536" width="470" height="48" rx="9"/>
+    <rect x="560" y="536" width="470" height="48" rx="8"/>
     <text class="nt" x="578" y="558">Queue worker / Lakeflow job</text>
     <text class="ns" x="578" y="574">Leases, retries, expired-lease recovery</text>
   </g>
@@ -182,16 +184,16 @@ const DETAIL = {
        b:"Durable facts are written to a <code>user_memories</code> namespace keyed by user, embedded with gte-large for semantic lookup. This is what survives when a conversation ends. Recall does not depend on the model choosing a tool: the server reads the store itself and injects what it finds into the first turn.",
        f:"agent_server/utils_memory.py", o:"store tables + embeddings"},
   a1: {t:"Care console",
-       b:"The page a care agent actually uses. It streams the reply token by token and renders every tool call live in the left rail, so you can watch which Lakebase objects the agent touches.",
+       b:"A Databricks App behind workspace SSO. It streams the reply token by token and renders every tool call live in the left rail, so you can watch which Lakebase objects the agent touches.",
        f:"agent_server/ui_chat.py", o:"browser only"},
   b1: {t:"Agent server",
-       b:"FastAPI behind Databricks Apps SSO. It resolves the thread, loads memory, runs the graph, and streams <code>response.*</code> events over SSE. It also hosts the ops dashboard and the queue worker.",
+       b:"FastAPI running as the Databricks App. It resolves the thread, loads memory, runs the graph, and streams <code>response.*</code> events over SSE. It also hosts the ops dashboard and the queue worker.",
        f:"agent_server/start_server.py", o:"n/a"},
-  b2: {t:"LangGraph agent + Claude Sonnet 4.5",
-       b:"The reasoning loop, wired to the checkpointer and the store. The model needs dependable multi-step tool calling: a weaker model wrote tool calls as plain text instead of invoking them, which silently dropped memory writes.",
+  b2: {t:"LangGraph agent on Model Serving",
+       b:"The reasoning loop, wired to the checkpointer and the store, calling Claude Sonnet 4.5 through a Databricks Model Serving endpoint. The model needs dependable multi-step tool calling: a weaker one wrote tool calls as plain text instead of invoking them, which silently dropped memory writes.",
        f:"agent_server/agent.py", o:"n/a"},
   c1: {t:"Care tools",
-       b:"<code>lookup_subscriber</code>, <code>get_usage_summary</code>, <code>recommend_plan</code> and <code>create_support_ticket</code> read and write the operational tables directly in Postgres. No warehouse hop.",
+       b:"<code>lookup_subscriber</code>, <code>get_usage_summary</code>, <code>recommend_plan</code> and <code>create_support_ticket</code> read and write the operational tables directly in Lakebase Postgres. No warehouse hop.",
        f:"agent_server/tools_gulfnet.py", o:"subscribers, plans, usage_daily, tickets"},
   c2: {t:"Hybrid knowledge search",
        b:"Tariff, roaming and SLA questions are grounded in the knowledge base rather than guessed. Full-text ranking today, with a Lakebase Search hook behind <code>USE_LAKEBASE_SEARCH</code>.",
@@ -203,7 +205,7 @@ const DETAIL = {
        b:"Work too slow for a chat turn is handed to Postgres instead of blocking the reply. The agent enqueues a task and can report status later.",
        f:"agent_server/orchestration.py", o:"tasks, task_attempts"},
   d1: {t:"Operational tables",
-       b:"The synthetic GulfNet business data: subscribers, plans, daily usage, tickets and network events. Same Postgres instance as the agent's memory, so a tool call is just a query.",
+       b:"The synthetic GulfNet business data: subscribers, plans, daily usage, tickets and network events. The same Lakebase instance holds the agent's memory, so a tool call is just a query.",
        f:"sql/01_schema.sql", o:"gulfnet schema"},
   d2: {t:"Knowledge chunks",
        b:"Policy documents chunked with a generated <code>tsvector</code> column plus an embedding column, giving lexical and semantic retrieval from one table.",
@@ -230,7 +232,7 @@ const STEPS = [
    d:"Known preferences are present before the first token is generated, so the agent does not ask the care agent to repeat themselves.",
    n:["b2","m2"], p:["p_b1_b2"]},
   {t:"Business questions hit the operational tables",
-   d:"Subscriber, usage and plan tools query Postgres directly. Memory and business data live in the same instance.",
+   d:"Subscriber, usage and plan tools query Lakebase directly. Memory and business data live in the same Postgres instance.",
    n:["b2","c1","d1"], p:["p_b2_c1","p_c1_d1"]},
   {t:"Policy questions are grounded in hybrid search",
    d:"Roaming rules, tariffs and SLA answers come from kb_chunks rather than from the model's imagination.",
@@ -327,7 +329,8 @@ LANDING_HTML = (
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>GulfNet Care Copilot &mdash; architecture</title>
+<title>GulfNet Care Copilot on Databricks Lakebase</title>
+__FAVICON__
 <style>"""
     + BASE_CSS
     + _CSS
@@ -341,8 +344,8 @@ __HEADER__
       <h2>One Postgres behind the agent &mdash; including <em>its memory</em></h2>
       <p>GulfNet is a fictional UAE operator. Its care copilot keeps conversation state,
       long-term customer preferences, knowledge retrieval and background task orchestration
-      in a single Lakebase Postgres instance. Click any block to see what it does, or play
-      the flow to watch a question travel through memory and back.</p>
+      in a single Databricks Lakebase instance, and runs as a Databricks App. Click any block
+      to see what it does, or play the flow to watch a question travel through memory and back.</p>
     </div>
     <div class="cta">
       <a class="btn" href="/chat">Get started &rarr;</a>
@@ -375,11 +378,11 @@ __HEADER__
     </div>
   </div>
 </main>
-<footer>Fictional operator &middot; synthetic data only</footer>
+<footer>Built on <b>Databricks Lakebase</b> &middot; fictional operator, synthetic data only</footer>
 <script>"""
     + _JS
     + """</script>
 </body>
 </html>
 """
-).replace("__HEADER__", header_html("home"))
+).replace("__HEADER__", header_html("home")).replace("__FAVICON__", FAVICON)

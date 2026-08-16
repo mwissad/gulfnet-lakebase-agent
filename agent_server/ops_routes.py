@@ -12,6 +12,7 @@ from fastapi.responses import HTMLResponse, StreamingResponse
 from pydantic import BaseModel, Field
 
 from agent_server import orchestration as orch
+from agent_server.ui_common import BASE_CSS, FAVICON, header_html
 
 logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/ops", tags=["ops"])
@@ -72,72 +73,51 @@ async def task_events():
     return StreamingResponse(gen(), media_type="text/event-stream")
 
 
-DASHBOARD_HTML = """<!DOCTYPE html>
+DASHBOARD_HTML = ("""<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>GulfNet Ops — Lakebase Queue</title>
-  <style>
-    :root {
-      --bg: #0b1f1a;
-      --panel: #12352c;
-      --ink: #e8f5f0;
-      --muted: #8fb3a8;
-      --accent: #2dd4a8;
-      --warn: #f0b429;
-      --bad: #f07178;
-    }
-    * { box-sizing: border-box; }
-    body {
-      margin: 0; font-family: "IBM Plex Sans", "Segoe UI", sans-serif;
-      background: radial-gradient(1200px 600px at 10% -10%, #1a4d3f 0%, var(--bg) 55%);
-      color: var(--ink); min-height: 100vh;
-    }
-    header {
-      padding: 1.5rem 2rem; border-bottom: 1px solid #1f4a3d;
-      display: flex; justify-content: space-between; align-items: baseline; gap: 1rem;
-    }
-    h1 { margin: 0; font-size: 1.35rem; letter-spacing: 0.02em; }
-    h1 span { color: var(--accent); }
-    .sub { color: var(--muted); font-size: 0.9rem; }
-    main { padding: 1.5rem 2rem; display: grid; gap: 1.25rem; }
-    .counts { display: flex; flex-wrap: wrap; gap: 0.75rem; }
-    .pill {
-      background: var(--panel); border: 1px solid #1f4a3d; border-radius: 999px;
-      padding: 0.45rem 0.9rem; font-size: 0.85rem;
-    }
-    .pill strong { color: var(--accent); }
-    table { width: 100%; border-collapse: collapse; background: var(--panel);
-      border-radius: 12px; overflow: hidden; border: 1px solid #1f4a3d; }
-    th, td { text-align: left; padding: 0.7rem 0.9rem; border-bottom: 1px solid #1a3d33;
-      font-size: 0.88rem; }
-    th { color: var(--muted); font-weight: 600; }
-    .status-enqueued { color: var(--warn); }
-    .status-processing { color: var(--accent); }
-    .status-completed { color: #7dcea0; }
-    .status-failed { color: var(--bad); }
-    .actions { display: flex; gap: 0.5rem; flex-wrap: wrap; }
+  <title>GulfNet Ops &mdash; Lakebase queue</title>
+__FAVICON__
+  <style>""" + BASE_CSS + """
+    main { padding:20px 22px; display:grid; gap:16px; }
+    .actions { display:flex; gap:9px; flex-wrap:wrap; align-items:center; }
     button {
-      background: var(--accent); color: #06241c; border: 0; border-radius: 8px;
-      padding: 0.55rem 0.9rem; font-weight: 600; cursor: pointer;
+      background:var(--lava); color:#fff; border:0; border-radius:7px;
+      padding:10px 18px; font-weight:600; font-size:13px; cursor:pointer; font-family:inherit;
     }
-    button.secondary { background: transparent; color: var(--ink); border: 1px solid #2a5c4c; }
-    #live { font-size: 0.8rem; color: var(--muted); }
+    button:hover { background:var(--lava-dim); }
+    button.secondary { background:rgba(27,49,57,.6); color:var(--oat); border:1px solid var(--line); }
+    button.secondary:hover { border-color:var(--lava); color:var(--lava); background:rgba(255,54,33,.08); }
+    #live { font-size:12px; color:var(--muted); margin-left:auto; display:flex; align-items:center; gap:7px; }
+    #live .led { width:7px; height:7px; border-radius:50%; background:var(--green); }
+    .counts { display:flex; flex-wrap:wrap; gap:9px; }
+    .pill {
+      background:var(--navy-800); border:1px solid var(--line); border-radius:999px;
+      padding:7px 14px; font-size:12.5px;
+    }
+    .pill strong { color:var(--lava); }
+    table {
+      width:100%; border-collapse:collapse; background:var(--navy-800);
+      border-radius:8px; overflow:hidden; border:1px solid var(--line);
+    }
+    th, td { text-align:left; padding:11px 14px; border-bottom:1px solid var(--line); font-size:12.5px; }
+    th { color:var(--muted); font-weight:600; letter-spacing:.06em; font-size:11px; text-transform:uppercase; }
+    tr:last-child td { border-bottom:0; }
+    .status-enqueued { color:var(--maize); }
+    .status-processing { color:var(--blue); }
+    .status-completed { color:var(--green); }
+    .status-failed { color:var(--err); }
   </style>
 </head>
 <body>
-  <header>
-    <div>
-      <h1><span>GulfNet</span> Ops Dashboard</h1>
-      <div class="sub">Lakebase Postgres task queue · VIP impact · churn batches</div>
-    </div>
-    <div id="live">connecting…</div>
-  </header>
+__HEADER__
   <main>
     <div class="actions">
       <button onclick="enqueueVip()">Enqueue VIP Marina impact</button>
       <button class="secondary" onclick="tick()">Run worker tick</button>
+      <div id="live"><span class="led"></span><span id="livetext">connecting&hellip;</span></div>
     </div>
     <div class="counts" id="counts"></div>
     <table>
@@ -175,14 +155,14 @@ DASHBOARD_HTML = """<!DOCTYPE html>
     async function tick() { await fetch('/ops/worker/tick', {method: 'POST'}); }
     const es = new EventSource('/ops/events');
     es.onmessage = (ev) => {
-      document.getElementById('live').textContent = 'live · ' + new Date().toLocaleTimeString();
+      document.getElementById('livetext').textContent = 'live · ' + new Date().toLocaleTimeString();
       render(JSON.parse(ev.data));
     };
-    es.onerror = () => { document.getElementById('live').textContent = 'reconnecting…'; };
+    es.onerror = () => { document.getElementById('livetext').textContent = 'reconnecting…'; };
   </script>
 </body>
 </html>
-"""
+""").replace("__HEADER__", header_html("ops")).replace("__FAVICON__", FAVICON)
 
 
 @router.get("/dashboard", response_class=HTMLResponse)

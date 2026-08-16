@@ -1,6 +1,6 @@
 """Chat console with a live agent-flow rail."""
 
-from agent_server.ui_common import BASE_CSS, header_html
+from agent_server.ui_common import BASE_CSS, FAVICON, LAKEBASE_ICON, header_html
 
 _CSS = """
 main {
@@ -12,18 +12,27 @@ main {
 aside { display:flex; flex-direction:column; min-height:0; }
 aside > h3 {
   margin:0 0 10px; font-size:11px; letter-spacing:.16em; color:var(--muted); font-weight:600;
+  display:flex; align-items:center; gap:7px;
+}
+aside > h3 .liveled {
+  width:7px; height:7px; border-radius:50%; background:var(--lava);
+  animation:pulse 1.6s ease-in-out infinite;
 }
 .rail { flex:1; overflow-y:auto; min-height:0; padding-right:4px; }
 
 .memcard {
-  background:rgba(247,201,72,.08); border:1px solid rgba(247,201,72,.4);
-  border-radius:10px; padding:11px 13px; margin-bottom:12px;
+  background:rgba(255,171,0,.08); border:1px solid rgba(255,171,0,.38);
+  border-radius:8px; padding:11px 13px; margin-bottom:12px;
 }
-.memcard h4 { margin:0 0 4px; font-size:12.5px; color:var(--mem); }
+.memcard h4 {
+  margin:0 0 4px; font-size:12.5px; color:var(--maize);
+  display:flex; align-items:center; gap:6px;
+}
+.memcard h4 svg { width:12px; height:13px; flex:0 0 auto; }
 .memcard p { margin:0; font-size:11.5px; color:var(--muted); line-height:1.5; }
 .memcard ul { margin:8px 0 0; padding-left:16px; }
-.memcard li { font-size:11px; color:var(--ink); margin-bottom:3px; word-break:break-word; }
-.memcard .delta { color:var(--mem); font-weight:600; }
+.memcard li { font-size:11px; color:var(--oat); margin-bottom:3px; word-break:break-word; }
+.memcard .delta { color:var(--maize); font-weight:600; }
 
 .fnode {
   position:relative; padding:0 0 12px 20px; border-left:1px solid var(--line); margin-left:5px;
@@ -31,51 +40,52 @@ aside > h3 {
 .fnode:last-child { border-left-color:transparent; }
 .fnode::before {
   content:""; position:absolute; left:-5px; top:3px; width:9px; height:9px;
-  border-radius:50%; background:#245647; border:2px solid var(--bg);
+  border-radius:50%; background:var(--navy-600); border:2px solid var(--navy-900);
 }
-.fnode.run::before { background:var(--accent); animation:pulse 1.1s ease-in-out infinite; }
-.fnode.done::before { background:var(--accent); }
-.fnode.mem::before { background:var(--mem); }
+.fnode.run::before { background:var(--lava); animation:pulse 1.1s ease-in-out infinite; }
+.fnode.done::before { background:var(--green); }
+.fnode.mem::before { background:var(--maize); }
 .fnode.bad::before { background:var(--err); }
 @keyframes pulse { 0%,100% { transform:scale(1); opacity:1; } 50% { transform:scale(1.5); opacity:.55; } }
 
 .fnode .fh { display:flex; align-items:baseline; justify-content:space-between; gap:8px; }
 .fnode .fn { font-size:12.5px; font-weight:600; }
-.fnode.mem .fn { color:var(--mem); }
+.fnode.mem .fn { color:var(--maize); }
 .fnode .ms { font-size:10px; color:var(--muted); white-space:nowrap; }
-.fnode .tgt { font-size:10.5px; color:var(--data); margin-top:2px; }
+.fnode .tgt { font-size:10.5px; color:var(--blue); margin-top:2px; }
 .fnode .args { font-size:10.5px; color:var(--muted); margin-top:3px; word-break:break-word; font-family:ui-monospace,Menlo,monospace; }
 .fnode details { margin-top:5px; }
-.fnode summary { font-size:10.5px; color:var(--accent); cursor:pointer; }
+.fnode summary { font-size:10.5px; color:var(--lava); cursor:pointer; }
 .fnode pre {
-  margin:5px 0 0; padding:8px; background:#0a2620; border:1px solid var(--line);
-  border-radius:6px; font-size:10.5px; max-height:170px; overflow:auto; white-space:pre-wrap; word-break:break-word;
+  margin:5px 0 0; padding:8px; background:var(--navy-900); border:1px solid var(--line);
+  border-radius:5px; font-size:10.5px; max-height:170px; overflow:auto; white-space:pre-wrap; word-break:break-word;
 }
-.turnsep { font-size:10px; letter-spacing:.14em; color:#557f72; margin:4px 0 10px; }
+.turnsep { font-size:10px; letter-spacing:.14em; color:#6E8B95; margin:4px 0 10px; }
 
 section.chat { display:flex; flex-direction:column; min-height:0; }
 .chips { display:flex; gap:7px; flex-wrap:wrap; margin-bottom:12px; }
 .chip {
-  background:var(--panel); border:1px solid var(--line); color:var(--ink);
+  background:rgba(27,49,57,.6); border:1px solid var(--line); color:var(--oat);
   border-radius:999px; padding:6px 12px; font-size:12px; cursor:pointer; font-family:inherit;
 }
-.chip:hover { border-color:var(--accent); }
+.chip:hover { border-color:var(--lava); color:var(--lava); }
 #log { flex:1; overflow-y:auto; display:flex; flex-direction:column; gap:11px; padding-bottom:14px; min-height:0; }
-.msg { max-width:88%; padding:11px 14px; border-radius:12px; font-size:14px; line-height:1.55; white-space:pre-wrap; }
-.user { align-self:flex-end; background:var(--accent); color:#06241c; font-weight:500; }
-.bot { align-self:flex-start; background:var(--panel); border:1px solid var(--line); }
-.err { align-self:flex-start; background:#3d1f22; border:1px solid #7a3b40; }
+.msg { max-width:88%; padding:11px 14px; border-radius:9px; font-size:14px; line-height:1.55; white-space:pre-wrap; }
+.user { align-self:flex-end; background:var(--lava); color:#fff; font-weight:500; }
+.bot { align-self:flex-start; background:var(--navy-800); border:1px solid var(--line); }
+.err { align-self:flex-start; background:#3A1E1B; border:1px solid #7A3A30; }
 form { flex:0 0 auto; display:flex; gap:10px; padding:11px 0 18px; }
 input[type=text] {
-  flex:1; background:var(--panel); border:1px solid var(--line); color:var(--ink);
-  border-radius:10px; padding:12px 14px; font-size:14px; font-family:inherit;
+  flex:1; background:var(--navy-800); border:1px solid var(--line); color:var(--oat);
+  border-radius:7px; padding:12px 14px; font-size:14px; font-family:inherit;
 }
-input[type=text]:focus { outline:none; border-color:var(--accent); }
+input[type=text]:focus { outline:none; border-color:var(--lava); }
 button.send {
-  background:var(--accent); color:#06241c; border:0; border-radius:10px;
-  padding:12px 20px; font-weight:600; font-size:14px; cursor:pointer; font-family:inherit;
+  background:var(--lava); color:#fff; border:0; border-radius:7px;
+  padding:12px 22px; font-weight:600; font-size:14px; cursor:pointer; font-family:inherit;
 }
-button.send:disabled { opacity:.55; cursor:not-allowed; }
+button.send:hover:not(:disabled) { background:var(--lava-dim); }
+button.send:disabled { opacity:.5; cursor:not-allowed; }
 """
 
 _JS = """
@@ -178,15 +188,14 @@ function setResult(node, text) {
 }
 
 async function refreshMemory(phase) {
-  const card = document.getElementById("memcard");
+  const body = document.getElementById("membody");
   try {
     const res = await fetch("/ui/memory?user_id=" + encodeURIComponent(USER_ID), { credentials: "same-origin" });
     const d = await res.json();
     const n = d.count || 0;
     const grew = lastMemCount !== null && n > lastMemCount;
     const delta = grew ? ' <span class="delta">+' + (n - lastMemCount) + " new</span>" : "";
-    let html = "<h4>Lakebase long-term memory</h4><p>" + n +
-               " item(s) stored for this user" + delta + "</p>";
+    let html = "<p>" + n + " item(s) stored for this user" + delta + "</p>";
     if (d.items && d.items.length) {
       html += "<ul>" + d.items.map(i =>
         "<li><b>" + i.key + "</b>: " + JSON.stringify(i.value) + "</li>").join("") + "</ul>";
@@ -194,7 +203,7 @@ async function refreshMemory(phase) {
       html += "<p>Nothing yet. Tell the agent a preference and watch it persist.</p>";
     }
     if (d.error) html += "<p>" + d.error + "</p>";
-    card.innerHTML = html;
+    body.innerHTML = html;
     if (grew && phase === "after") {
       addFlow("memory written to Lakebase", {
         state: "done", mem: true, target: (n - lastMemCount) + " new item(s) in user_memories"
@@ -203,7 +212,7 @@ async function refreshMemory(phase) {
     lastMemCount = n;
     return n;
   } catch (e) {
-    card.innerHTML = "<h4>Lakebase long-term memory</h4><p>Unavailable: " + e.message + "</p>";
+    body.innerHTML = "<p>Unavailable: " + e.message + "</p>";
     return 0;
   }
 }
@@ -352,6 +361,7 @@ CHAT_HTML = (
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>GulfNet Care Copilot &mdash; chat</title>
+__FAVICON__
 <style>"""
     + BASE_CSS
     + _CSS
@@ -361,11 +371,11 @@ CHAT_HTML = (
 __HEADER__
 <main>
   <aside>
-    <h3>AGENT FLOW &mdash; LIVE</h3>
+    <h3><span class="liveled"></span>AGENT FLOW &mdash; LIVE</h3>
     <div class="rail" id="rail">
       <div class="memcard" id="memcard">
-        <h4>Lakebase long-term memory</h4>
-        <p>Loading&hellip;</p>
+        <h4>__LBICON__Lakebase long-term memory</h4>
+        <div id="membody"><p>Loading&hellip;</p></div>
       </div>
     </div>
   </aside>
@@ -375,7 +385,7 @@ __HEADER__
     <div id="log">
       <div class="msg bot">Hello. I am the GulfNet Care Copilot for UAE customer care agents.
 
-Watch the left rail as I work: every tool call shows the Lakebase object it touches, its arguments and its result. Memory steps are marked in amber.
+Watch the left rail as I work: every tool call shows the Lakebase Postgres object it touches, its arguments and its result. Memory steps are marked in amber, completed steps in green.
 
 Seeded VIP: +971501234567 (Layla Al Mansoori, Dubai).</div>
     </div>
@@ -392,4 +402,9 @@ Seeded VIP: +971501234567 (Layla Al Mansoori, Dubai).</div>
 </body>
 </html>
 """
-).replace("__HEADER__", header_html("chat"))
+)
+CHAT_HTML = (
+    CHAT_HTML.replace("__HEADER__", header_html("chat"))
+    .replace("__FAVICON__", FAVICON)
+    .replace("__LBICON__", LAKEBASE_ICON)
+)
