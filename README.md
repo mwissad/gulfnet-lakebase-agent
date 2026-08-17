@@ -1,152 +1,142 @@
 # GulfNet Care Copilot
 
-Reusable end-to-end demo: a **UAE telco Care Copilot** on Databricks Apps + **Lakebase Postgres**, showcasing three pillars in one backend:
+An AI care agent for a fictional UAE telco, built on **Databricks Apps** and **Lakebase Postgres**.
 
-1. **Self-managed agent memory** (short-term threads + long-term preferences)  
-2. **Hybrid knowledge retrieval** (tariffs / roaming / SLA — Lakebase Search-ready)  
-3. **Postgres task orchestration** (VIP outage impact queue + ops SSE dashboard)
+One database backs the whole agent loop:
 
-Fictional operator **GulfNet** — synthetic data only. Built for Medium / customer demos and easy reuse under [github.com/mwissad](https://github.com/mwissad).
+1. **Memory** — remembers preferences across conversations  
+2. **Search** — retrieves roaming rules, tariffs, and SLAs next to customer data  
+3. **Orchestration** — runs longer jobs (like VIP outage impact) without blocking the chat  
 
-**Live app (FE-VM):** [gulfnet-care-copilot](https://gulfnet-care-copilot-7474660038694393.aws.databricksapps.com/)
+Synthetic data only. Clone it, point it at your workspace, and run.
 
-## Screenshots
+## How it works
 
-Most stacks glue Redis, a vector DB, and a broker behind an agent. Lakebase collapses that onto one OLTP system next to Apps, Jobs, and MLflow:
+Typical agent stacks wire Redis, a vector database, and a message broker. Lakebase collapses that into one Postgres system that sits next to Databricks Apps, Jobs, and MLflow:
 
-![Before vs after: Redis + vector DB + broker collapsed into one Lakebase Postgres](docs/images/simple-architecture.png)
+![One Lakebase for memory, search, and orchestration](docs/images/simple-architecture.png)
 
-Interactive architecture page at `/` — click any block, or play the request flow through memory:
+### What you see in the app
 
-![Interactive architecture landing page](docs/images/architecture.png)
+**Architecture** (`/`) — interactive diagram of the agent. Click any block, or play the flow to follow a question through memory and back.
 
-Chat console at `/chat` with a live left rail of every tool call and the Lakebase object it touches:
+![Architecture page](docs/images/architecture.png)
 
-![Chat console with live agent flow rail and Lakebase memory card](docs/images/chat.png)
+**Chat** (`/chat`) — ask care questions. The left rail shows each tool call live, including which Lakebase table it hit and whether memory was read or written.
 
-Ops dashboard at `/ops/dashboard` — Postgres task queue streamed over SSE:
+![Chat with live agent flow](docs/images/chat.png)
 
-![Ops dashboard showing enqueued, processing, and completed Lakebase tasks](docs/images/ops.png)
+**Ops** (`/ops/dashboard`) — watch background tasks (VIP impact reports, churn offers) as they move through the queue.
 
-## Architecture
+![Ops dashboard](docs/images/ops.png)
 
-```
-Architecture (/) + Chat (/chat) + Ops (/ops/dashboard)
-        │
-        ▼
-LangGraph agent (Databricks App)
-        │
-Lakebase Autoscaling Postgres
-├─ gulfnet_agent_memory (checkpoints / store)
-├─ gulfnet.* OLTP + kb_chunks
-└─ gulfnet.tasks / task_attempts
-        │
-In-app worker or Lakeflow Job
-```
+### What happens when you ask a question
 
-Workspace used in development: `https://fevm-mw-aws-demo.cloud.databricks.com`  
-Lakebase project: `gulfnet-agent` (branch `production`, database `gulfnet`).
+1. The chat sends only the newest message to the agent.  
+2. Lakebase reloads short-term conversation state, and injects any long-term preferences it already knows.  
+3. The model calls tools against Lakebase (customer lookup, network status, knowledge search, memory save, queue enqueue).  
+4. The answer streams back, and the turn is saved for the next message.
 
-## Quickstart (≈10 minutes)
+Try the seeded VIP customer: **+971501234567** (Layla Al Mansoori, Dubai).
 
-### Prerequisites
+## Get started
 
-- Databricks CLI **≥ 0.285** with `databricks postgres` (this repo was validated with 0.295)
-- `psql` client
-- Python 3.11+ and [uv](https://github.com/astral-sh/uv)
-- FE-VM / serverless workspace with Lakebase + Foundation Model endpoints
+### What you need
 
-### 1. Clone and configure
+- A Databricks workspace with Lakebase and a chat model serving endpoint  
+- [Databricks CLI](https://docs.databricks.com/aws/en/dev-tools/cli/) 0.285 or newer (`databricks postgres` support)  
+- [uv](https://github.com/astral-sh/uv) and Python 3.11+  
+- `psql`
+
+### 1. Clone
 
 ```bash
 git clone https://github.com/mwissad/gulfnet-lakebase-agent.git
 cd gulfnet-lakebase-agent
 cp .env.example .env
-# Edit DATABRICKS_CONFIG_PROFILE and paths as needed
 ```
 
-### 2. Authenticate
+Edit `.env`:
+
+- `DATABRICKS_CONFIG_PROFILE` — your CLI profile name  
+- `LLM_ENDPOINT_NAME` — a model endpoint that handles tool calling well (default: `databricks-claude-sonnet-4-5`)  
+- Lakebase project / branch / endpoint names if you use different ones  
+
+### 2. Sign in
 
 ```bash
-databricks auth login https://<your-workspace> --profile <profile>
+databricks auth login https://<your-workspace-url> --profile <your-profile>
 ```
 
-### 3. Create Lakebase + seed
+### 3. Create Lakebase and load demo data
 
 ```bash
-# Create project (once)
 databricks postgres create-project gulfnet-agent \
   --json '{"spec": {"display_name": "GulfNet Care Agent"}}' \
-  -p <profile> --no-wait
-
-# Wait until endpoint ACTIVE, then:
-PROFILE=<profile> ./scripts/setup_lakebase.sh
+  -p <your-profile> --no-wait
 ```
 
-### 4. Install and smoke-test tools (no LLM)
+Wait until the project endpoint is active, then:
+
+```bash
+PROFILE=<your-profile> ./scripts/setup_lakebase.sh
+```
+
+This creates the schema, loads synthetic UAE customers / usage / knowledge docs, and prepares agent memory tables.
+
+### 4. Install and smoke-test
 
 ```bash
 uv sync
 uv run python scripts/smoke_test_tools.py
 ```
 
-### 5. Run the app locally
+### 5. Run the app
 
 ```bash
 uv run start-app
 ```
 
-| Page | Path | What it shows |
-| --- | --- | --- |
-| Architecture | `/` | Interactive diagram; click any block, or play the flow to follow a question through memory |
-| Chat | `/chat` | Care console with a live rail of every tool call and the Lakebase object it touches |
-| Ops dashboard | `/ops/dashboard` | Task queue state, streamed over SSE |
+Open:
 
-Locally that is `http://localhost:8000/`.
+| Page | URL |
+| --- | --- |
+| Architecture | http://localhost:8000/ |
+| Chat | http://localhost:8000/chat |
+| Ops dashboard | http://localhost:8000/ops/dashboard |
 
-### 6. Deploy with Asset Bundle
+### Try these prompts
+
+1. `Look up +971501234567. What plan and recent roaming?`  
+2. `They travel to Riyadh monthly — remember that and advise on roaming.`  
+3. `Always contact them on WhatsApp in Arabic.`  
+4. `Dubai Marina degradation — impact on VIP accounts?`  
+
+More scripts: [`demos/GOLDEN_SCRIPTS.md`](demos/GOLDEN_SCRIPTS.md).
+
+## Deploy to Databricks Apps (optional)
 
 ```bash
-databricks bundle validate -t dev -p <profile>
-databricks bundle deploy -t dev -p <profile>
-# Grant App SP permissions (see scripts/grant_lakebase_permissions.py)
+databricks bundle validate -t dev -p <your-profile>
+databricks bundle deploy -t dev -p <your-profile>
 ```
 
-## Agent tools
+After deploy, grant the app’s service principal access to the Lakebase schema (see `scripts/grant_gulfnet_schema.sh`).
 
-| Tool | Purpose |
-|------|---------|
-| `lookup_subscriber` | MSISDN / account profile + plan |
-| `get_usage_summary` | Data / voice / roaming usage |
-| `search_knowledge` | Hybrid KB retrieval |
-| `check_network_status` | Synthetic outages by emirate / cell |
-| `recommend_plan` | Intent-based plan suggestions |
-| `create_support_ticket` | Write ticket row |
-| `enqueue_ops_task` | Postgres queue (`vip_outage_impact`, `churn_offer_batch`) |
-| `get_task_status` | Poll task result |
-| Memory tools | `get/save/delete_user_memory` |
+## Adapt it for your industry
 
-## Golden demos
+1. Replace `sql/02_seed.sql` with your own customers and knowledge docs  
+2. Keep the same tool pattern: lookup → search → remember → enqueue  
+3. Point `.env` / `databricks.yml` at your Lakebase project  
 
-See [`demos/GOLDEN_SCRIPTS.md`](demos/GOLDEN_SCRIPTS.md). Seed VIP: **+971501234567** (Layla Al Mansoori).
+## Learn more
 
-## Medium article
+Article draft: [`article/medium-draft.md`](article/medium-draft.md)
 
-Draft: [`article/medium-draft.md`](article/medium-draft.md)
-
-References:
-
-- [Simplify AI agent orchestration with Lakebase Postgres](https://www.databricks.com/blog/simplify-ai-agent-orchestration-lakebase-postgres)
-- [Self-managed agent memory](https://docs.databricks.com/aws/en/agents/agent-memory/self-managed-memory)
-- [Lakebase Search](https://www.databricks.com/blog/announcing-lakebase-search-agent-native-retrieval-built-lakebase-postgres)
-
-## Reusing for another industry
-
-1. Replace `sql/02_seed.sql` and KB chunks  
-2. Keep the tool surface area (lookup → search → enqueue)  
-3. Point `databricks.yml` at your Lakebase branch/database  
-4. Do not commit `.env` or workspace tokens  
+- [Simplify AI agent orchestration with Lakebase Postgres](https://www.databricks.com/blog/simplify-ai-agent-orchestration-lakebase-postgres)  
+- [Self-managed agent memory](https://docs.databricks.com/aws/en/agents/agent-memory/self-managed-memory)  
+- [Lakebase Search](https://www.databricks.com/blog/announcing-lakebase-search-agent-native-retrieval-built-lakebase-postgres)  
 
 ## License
 
-Demo code provided as-is for field engineering / educational reuse.
+Demo code provided as-is for educational reuse.
